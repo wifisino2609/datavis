@@ -1,0 +1,14 @@
+/* Names: Sinem Bilge Güler, Reshma Sudarsan */
+.line {
+    fill: none;
+    stroke-width: 2px;
+}
+.line-temp {
+    stroke: red
+}
+.line-rain {
+    stroke: blue
+}
+body {
+    font: 12px Arial;
+}
