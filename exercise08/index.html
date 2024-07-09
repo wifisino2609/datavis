@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Braided Graph</title>
+    <style>
+        .line {
+            fill: none;
+            stroke-width: 2;
+            shape-rendering: crispEdges;
+        }
+        .area {
+            fill-opacity: 2;
+             shape-rendering: crispEdges;
+        }
+        .axis-label {
+            font-size: 7px;
+            font-family: sans-serif;
+        }
+        .legend-label {
+            font-size: 10px;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <svg width="960" height="500"></svg>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="stonks.js"></script>
+    <script>
+        const svg = d3.select("svg"),
+            margin = {top: 40, right: 150, bottom: 50, left: 70},
+            width = +svg.attr("width") - margin.left - margin.right,
+            height = +svg.attr("height") - margin.top - margin.bottom,
+            g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const parseTime = d3.timeParse("%Y-%m-%d");
+
+        const x = d3.scaleTime().range([0, width]);
+        const y = d3.scaleLinear().range([height, 0]);
+        const color = d3.scaleOrdinal([
+            "#1f77b4", 
+            "#ff7f0e", 
+            "#2ca02c", 
+            "#d62728", 
+            "#9467bd", 
+            "#8c564b",
+            "#e377c2",
+            "#7f7f7f", 
+            "#bcbd22", 
+            "#17becf"  
+        ]);
+
+        data.forEach(d => {
+            d.date = parseTime(d.date);
+        });
+
+        const stocks = Array.from(new Set(data.map(d => d.Name)));
+        color.domain(stocks);
+
+        const stockData = stocks.map(stock => ({
+            id: stock,
+            values: data.filter(d => d.Name === stock)
+        }));
+
+        x.domain(d3.extent(data, d => d.date));
+        y.domain([
+            d3.min(stockData, c => d3.min(c.values, d => d.close * 0.95)),  
+            d3.max(stockData, c => d3.max(c.values, d => d.close))
+        ]);
+
+        const line = d3.line()
+            .x(d => x(d.date))
+            .y(d => y(d.close))
+            .curve(d3.curveBasis);
+
+        const area = d3.area()
+            .x(d => x(d.date))
+            .y0(y(d3.min(stockData, c => d3.min(c.values, d => d.close * 0.95)))) 
+            .y1(d => y(d.close))
+            .curve(d3.curveBasis);
+
+        const dateGroups = d3.groups(data, d => d.date);
+        
+        dateGroups.forEach(([date, values], i) => {
+            const gDate = g.append("g").attr("transform", `translate(0,0)`);
+
+            values.sort((a, b) => b.close - a.close);
+
+            values.forEach((d, j) => {
+                if (i < dateGroups.length - 1) {
+                    const nextValues = dateGroups[i + 1][1];
+                    const nextStock = nextValues.find(nd => nd.Name === d.Name);
+                    
+                    if (nextStock) {
+                        gDate.append("path")
+                            .datum([d, nextStock])
+                            .attr("class", "area")
+                            .attr("d", area)
+                            .style("fill", color(d.Name));
+                    }
+                }
+            });
+        });
+
+        g.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x));
+
+        g.append("g")
+            .call(d3.axisLeft(y));
+
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("transform", `translate(${margin.left + width + 10},${height + margin.top + 8})`)
+            .style("text-anchor", "end")
+            .text("Date");
+
+        svg.append("text")
+            .attr("class", "axis-label")
+            .attr("x", -margin.left + 150)  
+            .attr("y", margin.top - 10)  
+            .attr("dy", "1em")
+            .style("text-anchor", "end")  
+            .text("Closing Value");
+            
+
+        const legend = svg.selectAll(".legend")
+            .data(stocks)
+            .enter().append("g")
+            .attr("class", "legend")
+            .attr("transform", (d, i) => `translate(${margin.left + i * 80}, 3)`);
+
+        legend.append("rect")
+            .attr("x", 0)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", color);
+
+        legend.append("text")
+            .attr("x", 22)
+            .attr("y", 9)
+            .attr("dy", ".35em")
+            .attr("class", "legend-label")
+            .style("text-anchor", "start")
+            .text(d => d);
+    </script>
+</body>
+</html>
