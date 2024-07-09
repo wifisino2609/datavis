@@ -1,0 +1,26 @@
+.cell text {
+    font-size: 12px;
+    text-anchor: middle;
+    -o-table-baseline: central;
+}
+
+.frame {
+    fill: none;
+    stroke: #ccc;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    shape-rendering: crispEdges;
+    stroke: #ccc;
+}
+
+.histogram {
+    fill: steelblue;
+}
+
+.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}
